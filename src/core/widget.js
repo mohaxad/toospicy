@@ -25,13 +25,13 @@ export default class Widget {
     
     // Listen for settings changes
     this.events.on('settings:changed', this.updateUI.bind(this));
+    
     if (document.body) {
-      this.createToggleButton();
+        this.render();
     } else {
-      // If body isn't available yet, wait for it
-      document.addEventListener('DOMContentLoaded', () => {
-        this.createToggleButton();
-      });
+        document.addEventListener('DOMContentLoaded', () => {
+            this.render();
+        });
     }
   }
   
@@ -47,6 +47,7 @@ export default class Widget {
    * Render the accessibility widget
    */
   render() {
+    console.log('Rendering widget...');
     // Add global styles
     addGlobalStyles();
     
@@ -70,6 +71,7 @@ export default class Widget {
  * Create the toggle button
  */
 createToggleButton() {
+  console.log('Creating toggle button...');
   this.toggleButton = createElement('button', {
     id: 'spicy-access-btn',
     innerHTML: '<i class="fa-solid fa-universal-access" aria-hidden="true"></i><span class="spicy-btn-text">A11Y</span>',

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>SpicyAccessibility Demo</title>
   <style>
     body {
@@ -241,5 +242,28 @@ document.addEventListener('DOMContentLoaded', () => {
   <footer>
     <p>&copy; 2023 SpicyDonut - Licensed under MIT - <a href="https://github.com/spicydonut/spicy-accessibility" target="_blank">GitHub Repository</a></p>
   </footer>
+  
+  <script src="../../dist/spicy-accessibility.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const widget = new SpicyAccessibility({
+        position: 'bottom-right'
+      });
+    });
+  </script>
+  <!-- Load built CSS -->
+<link rel="stylesheet" href="../../dist/spicy-accessibility.min.css">
+
+<!-- Load built JS -->
+<script src="../../dist/spicy-accessibility.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    SpicyAccessibility.init({
+      position: 'bottom-right'
+    });
+  });
+</script>
 </body>
 </html>
