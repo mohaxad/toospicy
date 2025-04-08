@@ -39,7 +39,8 @@ export default class Settings {
       
       // Navigation
       pageStructure: false,
-      textToSpeech: false
+      textToSpeech: false,
+      tooltips: false
     };
   }
   
@@ -179,3 +180,63 @@ export default class Settings {
    */
   loadProfile(profileName) {
     // Check if profile exists
+    if (this.profiles[profileName]) {
+      // Apply profile settings
+      this.settings = { ...this.profiles[profileName] };
+      this.save();
+      this.events.emit('settings:profile:loaded', profileName, this.settings);
+    } else {
+      console.warn(`Profile "${profileName}" not found`);
+    }
+  }
+  
+  /**
+   * Save current settings as a new profile
+   * @param {string} profileName - Name of the profile to save
+   */
+  saveProfile(profileName) {
+    // Don't overwrite default profile
+    if (profileName === 'default') {
+      console.warn('Cannot overwrite the default profile');
+      return false;
+    }
+    
+    // Save current settings as profile
+    this.profiles[profileName] = { ...this.settings };
+    this.storage.setItem('spicyProfiles', JSON.stringify(this.profiles));
+    this.events.emit('settings:profile:saved', profileName, this.settings);
+    return true;
+  }
+  
+  /**
+   * Delete a saved profile
+   * @param {string} profileName - Name of the profile to delete
+   * @returns {boolean} Success indicator
+   */
+  deleteProfile(profileName) {
+    // Don't delete built-in profiles
+    const builtInProfiles = ['default', 'highContrast', 'dyslexic', 'senior', 'lowVision', 'motor', 'cognitive'];
+    if (builtInProfiles.includes(profileName)) {
+      console.warn(`Cannot delete built-in profile "${profileName}"`);
+      return false;
+    }
+    
+    // Delete profile
+    if (this.profiles[profileName]) {
+      delete this.profiles[profileName];
+      this.storage.setItem('spicyProfiles', JSON.stringify(this.profiles));
+      this.events.emit('settings:profile:deleted', profileName);
+      return true;
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get all available profiles
+   * @returns {Object} All profiles
+   */
+  getProfiles() {
+    return { ...this.profiles };
+  }
+}

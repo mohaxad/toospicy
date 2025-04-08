@@ -27,7 +27,7 @@ const DEFAULT_CONFIG = {
   theme: 'light', // 'light', 'dark', or 'auto'
   keyboardShortcut: 'alt+a',
   autoSave: true,
-  debug: false
+  debug: true  // Enable debug by default to see what's happening
 };
 
 /**
@@ -39,33 +39,88 @@ const SpicyAccessibility = {
    * @param {Object} config - Configuration options
    */
   init(config = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    console.log('SpicyAccessibility initialization started');
     
-    // Initialize core components
-    this.events = new EventBus();
-    this.storage = new Storage(this.config.autoSave);
-    this.settings = new Settings(this.storage, this.events);
-    
-    // Load saved settings
-    this.settings.load();
-    
-    // Initialize UI
-    this.widget = new Widget(this.config, this.settings, this.events);
-    
-    // Register feature modules
-    this._registerFeatures();
-    
-    // Initialize UI and render
-    this.widget.render();
-    
-    // Apply initial profile if specified
-    if (this.config.initialProfile !== 'default') {
-      this.settings.loadProfile(this.config.initialProfile);
-    }
-    
-    // Log initialization complete
-    if (this.config.debug) {
-      console.log('SpicyAccessibility initialized with config:', this.config);
+    try {
+      this.config = { ...DEFAULT_CONFIG, ...config };
+      
+      // Initialize core components
+      this.events = new EventBus();
+      console.log('EventBus initialized');
+      
+      this.storage = new Storage(this.config.autoSave);
+      console.log('Storage initialized');
+      
+      this.settings = new Settings(this.storage, this.events);
+      console.log('Settings initialized');
+      
+      // Load saved settings
+      this.settings.load();
+      console.log('Settings loaded');
+      
+      // Initialize UI
+      this.widget = new Widget(this.config, this.settings, this.events);
+      console.log('Widget initialized');
+      
+      // Register feature modules
+      this._registerFeatures();
+      console.log('Features registered');
+      
+      // Initialize UI and render
+      this.widget.render();
+      console.log('Widget rendered');
+      
+      // Apply initial profile if specified
+      if (this.config.initialProfile !== 'default') {
+        this.settings.loadProfile(this.config.initialProfile);
+        console.log(`Applied initial profile: ${this.config.initialProfile}`);
+      }
+      
+      console.log('SpicyAccessibility initialization completed');
+      
+      // Create an emergency fallback button if the widget button doesn't appear
+      setTimeout(() => {
+        const existingButton = document.getElementById('spicy-access-btn');
+        if (!existingButton) {
+          console.warn('Accessibility button not found - creating emergency fallback');
+          const fallbackButton = document.createElement('button');
+          fallbackButton.id = 'emergency-a11y-btn';
+          fallbackButton.innerHTML = '<span style="font-weight:bold;">A11Y</span>';
+          fallbackButton.style.cssText = `
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 10000 !important;
+            width: auto !important;
+            min-width: 56px !important;
+            height: 56px !important;
+            padding: 0 15px !important;
+            background-color: #4361ee !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 28px !important;
+            font-size: 16px !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+          `;
+          document.body.appendChild(fallbackButton);
+          
+          // Make the fallback button functional
+          fallbackButton.addEventListener('click', () => {
+            if (this.widget && typeof this.widget.togglePanel === 'function') {
+              this.widget.togglePanel();
+            } else {
+              alert('Accessibility panel would open here, but there was an issue with the widget initialization.');
+            }
+          });
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error initializing SpicyAccessibility:', error);
     }
     
     return this;
@@ -76,27 +131,31 @@ const SpicyAccessibility = {
    * @private
    */
   _registerFeatures() {
-    const features = [
-      new TextFeatures(this.settings, this.events),
-      new VisualFeatures(this.settings, this.events),
-      new NavigationFeatures(this.settings, this.events),
-      new AudioFeatures(this.settings, this.events),
-      new Profiles(this.settings, this.events)
-    ];
-    
-    // Filter features if specific ones are requested
-    if (Array.isArray(this.config.features) && this.config.features !== 'all') {
+    try {
+      const features = [
+        new TextFeatures(this.settings, this.events),
+        new VisualFeatures(this.settings, this.events),
+        new NavigationFeatures(this.settings, this.events),
+        new AudioFeatures(this.settings, this.events),
+        new Profiles(this.settings, this.events)
+      ];
+      
+      // Filter features if specific ones are requested
+      if (Array.isArray(this.config.features) && this.config.features !== 'all') {
+        features.forEach(featureModule => {
+          featureModule.enabledFeatures = featureModule.features.filter(
+            feature => this.config.features.includes(feature.id)
+          );
+        });
+      }
+      
+      // Register all features with the widget
       features.forEach(featureModule => {
-        featureModule.enabledFeatures = featureModule.features.filter(
-          feature => this.config.features.includes(feature.id)
-        );
+        this.widget.registerFeatureModule(featureModule);
       });
+    } catch (error) {
+      console.error('Error registering features:', error);
     }
-    
-    // Register all features with the widget
-    features.forEach(featureModule => {
-      this.widget.registerFeatureModule(featureModule);
-    });
   },
   
   /**

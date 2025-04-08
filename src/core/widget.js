@@ -25,6 +25,14 @@ export default class Widget {
     
     // Listen for settings changes
     this.events.on('settings:changed', this.updateUI.bind(this));
+    if (document.body) {
+      this.createToggleButton();
+    } else {
+      // If body isn't available yet, wait for it
+      document.addEventListener('DOMContentLoaded', () => {
+        this.createToggleButton();
+      });
+    }
   }
   
   /**
@@ -58,28 +66,48 @@ export default class Widget {
     this.addFocusListeners();
   }
   
-  /**
-   * Create the toggle button
-   */
-  createToggleButton() {
-    this.toggleButton = createElement('button', {
-      id: 'spicy-access-btn',
-      innerHTML: '<i class="fa-solid fa-universal-access" aria-hidden="true"></i>',
-      attributes: {
-        'aria-label': 'Open accessibility menu',
-        'title': 'Accessibility Options (Alt+A)'
-      }
-    });
-    
-    // Position according to config
-    this.applyButtonPosition();
-    
-    // Add click event listener
-    this.toggleButton.addEventListener('click', this.togglePanel);
-    
-    // Add to DOM
-    document.body.appendChild(this.toggleButton);
-  }
+/**
+ * Create the toggle button
+ */
+createToggleButton() {
+  this.toggleButton = createElement('button', {
+    id: 'spicy-access-btn',
+    innerHTML: '<i class="fa-solid fa-universal-access" aria-hidden="true"></i><span class="spicy-btn-text">A11Y</span>',
+    style: {
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      zIndex: '9999',
+      width: 'auto',
+      minWidth: '56px',
+      height: '56px',
+      borderRadius: '28px',
+      backgroundColor: '#4361ee',
+      color: 'white',
+      border: 'none',
+      cursor: 'pointer',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '0 15px'
+    },
+    attributes: {
+      'aria-label': 'Open accessibility menu',
+      'title': 'Accessibility Options (Alt+A)'
+    }
+  });
+  
+  // Position according to config
+  this.applyButtonPosition();
+  
+  // Add click event listener
+  this.toggleButton.addEventListener('click', this.togglePanel);
+  
+  // Add to DOM
+  document.body.appendChild(this.toggleButton);
+  
+}
   
   /**
    * Apply position to the toggle button based on config
