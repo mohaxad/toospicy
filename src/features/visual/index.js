@@ -22,6 +22,18 @@ export default class VisualFeatures {
         type: 'toggle'
       },
       {
+        id: 'smartContrast',
+        name: 'Smart Contrast',
+        icon: 'fa-solid fa-circle-half-stroke',
+        type: 'toggle'
+      },
+      {
+        id: 'contrastBlue',
+        name: 'Blue Contrast',
+        icon: 'fa-solid fa-droplet',
+        type: 'toggle'
+      },
+      {
         id: 'darkMode',
         name: 'Dark Mode',
         icon: 'fa-solid fa-moon',
@@ -58,15 +70,33 @@ export default class VisualFeatures {
         type: 'toggle'
       },
       {
+        id: 'reduceMotion',
+        name: 'Reduce Motion',
+        icon: 'fa-solid fa-person-walking',
+        type: 'toggle'
+      },
+      {
         id: 'bigCursor',
         name: 'Large Cursor',
         icon: 'fa-solid fa-mouse-pointer',
         type: 'toggle'
       },
       {
+        id: 'xlCursor',
+        name: 'XL Cursor',
+        icon: 'fa-solid fa-arrow-pointer',
+        type: 'toggle'
+      },
+      {
         id: 'focusIndicator',
         name: 'Focus Indicator',
         icon: 'fa-solid fa-bullseye',
+        type: 'toggle'
+      },
+      {
+        id: 'tooltips',
+        name: 'Show Tooltips',
+        icon: 'fa-solid fa-comment-dots',
         type: 'toggle'
       }
     ];
@@ -79,47 +109,81 @@ export default class VisualFeatures {
    * Initialize visual features
    */
   init() {
-    // Apply current settings
-    this.applySettings(this.settings.getAll());
+    // Apply existing settings on page load
+    Object.entries(this.settings.getAll())
+      .filter(([key]) => this.features.some(f => f.id === key))
+      .forEach(([key, value]) => {
+        if (value) {
+          this.applyVisualSetting(key, value);
+        }
+      });
     
     // Listen for settings changes
-    this.events.on('settings:changed', this.applySettings.bind(this));
+    this.events.on('settings:changed', (settings, changedKey) => {
+      if (this.features.some(f => f.id === changedKey)) {
+        this.applyVisualSetting(changedKey, settings[changedKey]);
+      }
+    });
     
     // Handle system color scheme preference
     this.handleColorSchemePreference();
   }
   
   /**
-   * Apply visual settings to the page
-   * @param {Object} settings - Current settings
+   * Apply visual accessibility settings to the document
+   * @param {string} id - Feature ID
+   * @param {boolean} enabled - Whether feature is enabled
    */
-  applySettings(settings) {
-    // Apply high contrast
-    document.body.classList.toggle('spicy-contrast', settings.contrast);
+  applyVisualSetting(id, enabled) {
+    const body = document.body;
     
-    // Apply dark mode
-    document.body.classList.toggle('spicy-dark-mode', settings.darkMode);
+    // Remove existing classes first for mutually exclusive features
+    if (id === 'contrast' || id === 'smartContrast' || id === 'contrastBlue') {
+      body.classList.remove('spicy-contrast', 'spicy-contrast-high', 'spicy-contrast-blue');
+      
+      if (enabled) {
+        if (id === 'contrast') {
+          body.classList.add('spicy-contrast-high');
+        } else if (id === 'contrastBlue') {
+          body.classList.add('spicy-contrast-blue');
+        } else if (id === 'smartContrast') {
+          body.classList.add('spicy-contrast');
+        }
+      }
+      return;
+    }
     
-    // Apply light mode
-    document.body.classList.toggle('spicy-light-mode', settings.lightMode);
+    // Handle cursor size options
+    if (id === 'bigCursor' || id === 'xlCursor') {
+      body.classList.remove('spicy-big-cursor', 'spicy-xl-cursor');
+      
+      if (enabled) {
+        if (id === 'bigCursor') {
+          body.classList.add('spicy-big-cursor');
+        } else if (id === 'xlCursor') {
+          body.classList.add('spicy-xl-cursor');
+        }
+      }
+      return;
+    }
     
-    // Apply grayscale
-    document.body.classList.toggle('spicy-grayscale', settings.grayscale);
+    // Handle motion sensitivity levels
+    if (id === 'pauseAnimations' || id === 'reduceMotion') {
+      body.classList.remove('spicy-stop-motion', 'spicy-reduce-motion');
+      
+      if (enabled) {
+        if (id === 'pauseAnimations') {
+          body.classList.add('spicy-stop-motion');
+        } else if (id === 'reduceMotion') {
+          body.classList.add('spicy-reduce-motion');
+        }
+      }
+      return;
+    }
     
-    // Apply link highlighting
-    document.body.classList.toggle('spicy-highlight-links', settings.highlightLinks);
-    
-    // Apply image hiding
-    document.body.classList.toggle('spicy-hide-images', settings.hideImages);
-    
-    // Apply animation pausing
-    document.body.classList.toggle('spicy-pause-animations', settings.pauseAnimations);
-    
-    // Apply big cursor
-    document.body.classList.toggle('spicy-big-cursor', settings.bigCursor);
-    
-    // Apply focus indicator
-    document.body.classList.toggle('spicy-focus-indicator', settings.focusIndicator);
+    // Standard class toggle for other features
+    const className = `spicy-${id.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+    body.classList.toggle(className, enabled);
   }
   
   /**
@@ -157,28 +221,35 @@ export default class VisualFeatures {
       innerHTML: `<h3><i class="fa-solid fa-circle-half-stroke"></i> Visual Display</h3>`
     });
     
-    // Create grid for feature buttons
+    // Create grid for feature buttons (UserWay style with 3 columns)
     const grid = createElement('div', { className: 'spicy-grid' });
     
-    // Split features into color & display sections
-    const colorFeatures = ['contrast', 'darkMode', 'lightMode', 'grayscale'];
-    const displayFeatures = ['highlightLinks', 'hideImages', 'pauseAnimations', 'bigCursor', 'focusIndicator'];
+    // Split features into logical groups
+    const contrastFeatures = ['contrast', 'smartContrast', 'contrastBlue'];
+    const modeFeatures = ['darkMode', 'lightMode', 'grayscale'];
+    const contentFeatures = ['highlightLinks', 'hideImages'];
+    const motionFeatures = ['pauseAnimations', 'reduceMotion'];
+    const cursorFeatures = ['bigCursor', 'xlCursor'];
+    const focusFeatures = ['focusIndicator', 'tooltips'];
     
-    // Add color features first
-    this.enabledFeatures
-      .filter(feature => colorFeatures.includes(feature.id))
-      .forEach(feature => {
-        const button = this.createFeatureButton(feature);
-        grid.appendChild(button);
-      });
+    // Add all features in order within their groups
+    const allGroups = [
+      contrastFeatures, 
+      modeFeatures, 
+      contentFeatures, 
+      motionFeatures, 
+      cursorFeatures, 
+      focusFeatures
+    ];
     
-    // Add display features
-    this.enabledFeatures
-      .filter(feature => displayFeatures.includes(feature.id))
-      .forEach(feature => {
-        const button = this.createFeatureButton(feature);
-        grid.appendChild(button);
-      });
+    allGroups.forEach(group => {
+      this.enabledFeatures
+        .filter(feature => group.includes(feature.id))
+        .forEach(feature => {
+          const button = this.createFeatureButton(feature);
+          grid.appendChild(button);
+        });
+    });
     
     // Add grid to section if it has any children
     if (grid.children.length > 0) {

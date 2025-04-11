@@ -46,11 +46,39 @@ export default class NavigationFeatures {
    * Initialize navigation features
    */
   init() {
-    // Apply current settings
-    this.applySettings(this.settings.getAll());
+    // Apply any existing settings
+    const settings = this.settings.getAll();
+    
+    if (settings.pageStructure) {
+      this.showPageStructure();
+    }
+    
+    if (settings.readingGuide) {
+      this.enableReadingGuide();
+    }
+    
+    if (settings.tooltips) {
+      this.toggleTooltips(true);
+    }
     
     // Listen for settings changes
-    this.events.on('settings:changed', this.applySettings.bind(this));
+    this.events.on('settings:changed', (settings, changedKey) => {
+      if (changedKey === 'pageStructure') {
+        if (settings.pageStructure) {
+          this.showPageStructure();
+        } else {
+          this.hidePageStructure();
+        }
+      } else if (changedKey === 'readingGuide') {
+        if (settings.readingGuide) {
+          this.enableReadingGuide();
+        } else {
+          this.disableReadingGuide();
+        }
+      } else if (changedKey === 'tooltips') {
+        this.toggleTooltips(settings.tooltips);
+      }
+    });
   }
   
   /**
@@ -312,6 +340,50 @@ export default class NavigationFeatures {
     if (this.handlers.readingGuideHandler) {
       document.removeEventListener('mousemove', this.handlers.readingGuideHandler);
       delete this.handlers.readingGuideHandler;
+    }
+  }
+
+  /**
+   * Apply tooltip functionality
+   * @param {boolean} enabled - Whether tooltips are enabled
+   */
+  toggleTooltips(enabled) {
+    if (enabled) {
+      document.body.classList.add('spicy-tooltips');
+      
+      // Add tooltip wrappers to elements with title attributes
+      const elementsWithTitle = document.querySelectorAll('[title]:not([title=""])');
+      elementsWithTitle.forEach(element => {
+        // Skip if already processed
+        if (element.dataset.processingTooltip) return;
+        
+        element.dataset.processingTooltip = 'true';
+        
+        // Store original title
+        const originalTitle = element.getAttribute('title');
+        element.dataset.spicyTooltip = originalTitle;
+        
+        // Remove title attribute to prevent native tooltips
+        element.removeAttribute('title');
+        
+        // Add tooltip event listeners
+        element.addEventListener('mouseenter', function() {
+          this.setAttribute('title', this.dataset.spicyTooltip);
+        });
+        
+        element.addEventListener('mouseleave', function() {
+          this.removeAttribute('title');
+        });
+      });
+      
+    } else {
+      document.body.classList.remove('spicy-tooltips');
+      
+      // Restore original titles
+      document.querySelectorAll('[data-spicy-tooltip]').forEach(element => {
+        element.setAttribute('title', element.dataset.spicyTooltip);
+        delete element.dataset.processingTooltip;
+      });
     }
   }
 }

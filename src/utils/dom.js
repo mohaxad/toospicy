@@ -85,27 +85,125 @@ export function createElement(tag, options = {}) {
 
 /**
  * Add global styles to the document head
+ * @returns {Promise} Promise that resolves when styles are loaded
  */
 export function addGlobalStyles() {
-  // Check if styles are already added
-  if (document.getElementById('spicy-global-styles')) return;
-  
-  // Create style element
-  const fontAwesomeLink = document.createElement('link');
-  fontAwesomeLink.rel = 'stylesheet';
-  fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-  document.head.appendChild(fontAwesomeLink);
-  
-  // Add accessible focus styles
-  const focusStyles = document.createElement('style');
-  focusStyles.id = 'spicy-global-styles';
-  focusStyles.textContent = `
-    .keyboard-focus {
-      outline: 3px solid #4361ee !important;
-      outline-offset: 2px !important;
+  return new Promise((resolve) => {
+    console.log('Adding global styles...');
+    
+    // Check if styles are already added
+    if (document.getElementById('spicy-global-styles')) {
+      console.log('Global styles already added');
+      resolve();
+      return;
     }
-  `;
-  document.head.appendChild(focusStyles);
+    
+    // Add Font Awesome from CDN directly if not already loaded
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+      console.log('Loading Font Awesome from CDN...');
+      
+      // Create a link element for Font Awesome
+      const fontAwesomeLink = document.createElement('link');
+      fontAwesomeLink.rel = 'stylesheet';
+      fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+      fontAwesomeLink.integrity = 'sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==';
+      fontAwesomeLink.crossOrigin = 'anonymous';
+      fontAwesomeLink.referrerPolicy = 'no-referrer';
+      
+      document.head.appendChild(fontAwesomeLink);
+      
+      // Additionally load the solid style specifically
+      const fontAwesomeSolidLink = document.createElement('link');
+      fontAwesomeSolidLink.rel = 'stylesheet';
+      fontAwesomeSolidLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css';
+      fontAwesomeSolidLink.integrity = 'sha512-yDUXOUWwbHH4ggxueDnC5vJv4tmfySpVdIcN1LksGZi8W8EVZv4uKGrQc0pVf66zS7LDhFJM7Zdeow1sw1/8Jw==';
+      fontAwesomeSolidLink.crossOrigin = 'anonymous';
+      fontAwesomeSolidLink.referrerPolicy = 'no-referrer';
+      
+      document.head.appendChild(fontAwesomeSolidLink);
+      
+      console.log('Font Awesome CSS added to document head');
+    } else {
+      console.log('Font Awesome already loaded');
+    }
+    
+    // Add inline Font Awesome styles as a fallback
+    const faFallbackStyle = document.createElement('style');
+    faFallbackStyle.textContent = `
+      .fa-universal-access:before {
+        content: "♿";
+      }
+      .fa-xmark:before {
+        content: "✕";
+      }
+      .fa-arrows-rotate:before {
+        content: "↻";
+      }
+    `;
+    document.head.appendChild(faFallbackStyle);
+    
+    // Add accessible focus styles
+    const focusStyles = document.createElement('style');
+    focusStyles.id = 'spicy-global-styles';
+    focusStyles.textContent = `
+      .keyboard-focus {
+        outline: 3px solid #4265ED !important;
+        outline-offset: 2px !important;
+      }
+      
+      /* Feature icon styles */
+      #spicy-access-panel i[class*="fa-"],
+      #spicy-access-btn i[class*="fa-"] {
+        font-family: 'Font Awesome 6 Free', 'FontAwesome', sans-serif !important;
+        font-weight: 900 !important;
+        font-style: normal;
+        display: inline-block;
+      }
+      
+      /* Panel animation */
+      #spicy-access-panel {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      
+      /* Focus indicator styles */
+      body.spicy-focus-indicator *:focus {
+        outline: 4px solid #f00 !important;
+        outline-offset: 3px !important;
+        border-radius: 2px;
+      }
+      
+      /* Big cursor styles */
+      body.spicy-big-cursor {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M8.652,29.21l8.364-8.4L5.594,13.414c-1.1-0.718-1.399-2.204-0.678-3.312 c0.721-1.107,2.205-1.401,3.313-0.678l11.414,7.389l8.365-8.398c0.785-0.789,2.048-0.789,2.832,0 c0.783,0.783,0.783,2.05,0,2.833l-8.364,8.397l11.414,7.388c1.107,0.721,1.409,2.205,0.68,3.313 c-0.722,1.107-2.206,1.407-3.315,0.679L19.83,22.638l-8.363,8.396c-0.786,0.786-2.048,0.786-2.832,0 C7.852,31.258,7.852,29.994,8.652,29.21z" fill="black" stroke="white" stroke-width="1.5"/></svg>') 15 15, auto !important;
+      }
+      
+      /* Tooltip styles */
+      body.spicy-tooltips [title]:not([title=""]):hover::after {
+        content: attr(title);
+        position: absolute;
+        background: #333;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        z-index: 10000;
+        white-space: normal;
+        max-width: 300px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(100% + 10px);
+        pointer-events: none;
+        line-height: 1.5;
+      }
+    `;
+    document.head.appendChild(focusStyles);
+    
+    console.log('Global styles added');
+    
+    // Resolve immediately without waiting for font loading
+    resolve();
+  });
 }
 
 /**

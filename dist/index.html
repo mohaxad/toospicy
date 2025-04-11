@@ -136,12 +136,22 @@ import 'spicy-accessibility/dist/spicy-accessibility.min.css';
 
 document.addEventListener('DOMContentLoaded', () => {
   SpicyAccessibility.init();
-});</code></pre></section></main><footer><p>&copy; 2023 SpicyDonut - Licensed under MIT - <a href="https://github.com/spicydonut/spicy-accessibility" target="_blank">GitHub Repository</a></p></footer><script src="../../dist/spicy-accessibility.min.js"></script><script>document.addEventListener('DOMContentLoaded', () => {
-      const widget = new SpicyAccessibility({
-        position: 'bottom-right'
-      });
-    });</script><link rel="stylesheet" href="../../dist/spicy-accessibility.min.css"><script src="../../dist/spicy-accessibility.min.js"></script><script>document.addEventListener('DOMContentLoaded', () => {
-    SpicyAccessibility.init({
-      position: 'bottom-right'
-    });
-  });</script></body></html>
+});</code></pre></section></main><footer><p>&copy; 2023 SpicyDonut - Licensed under MIT - <a href="https://github.com/spicydonut/spicy-accessibility" target="_blank">GitHub Repository</a></p></footer><link rel="stylesheet" href="../../dist/spicy-accessibility.min.css"><script src="../../dist/spicy-accessibility.min.js"></script><script>// Wait for document to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Ensure SpicyAccessibility exists before calling init
+      if (typeof SpicyAccessibility !== 'undefined') {
+        try {
+          // Initialize with config
+          SpicyAccessibility.init({
+            position: 'bottom-right',
+            debug: true // Enable debug mode
+          });
+          
+          console.log('SpicyAccessibility initialized successfully');
+        } catch (error) {
+          console.error('Error initializing SpicyAccessibility:', error);
+        }
+      } else {
+        console.error('SpicyAccessibility not found. Check if the script is loaded correctly.');
+      }
+    });</script></body></html>
